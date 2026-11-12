@@ -547,7 +547,7 @@ function renderModal(){
   const box = $('#modalBox'), a = m.b.a;
   const head = `<div class="big" style="background:${m.b.c}">${esc(a.pos)}</div>`;
   const ptsTxt = m.b.pts > 1 ? `<b style="color:#d97706">${m.b.pts} points</b>` : '1 point';
-  const peek = `<div class="peek">${m.peek ? `${esc(a.pos)} – <span>${esc(a.komp)}</span> – <span>${esc(a.sup)}</span>`
+  const peek = `<div class="peek">${m.peek || m.step === 'judge' ? `${esc(a.pos)} – <span>${esc(a.komp)}</span> – <span>${esc(a.sup)}</span>`
                  : `<button class="small" style="margin:0" onclick="togglePeek()">👁 Show answer (only for you) <kbd>S</kbd></button>`}</div>`;
   if (m.step === 'team'){
     box.innerHTML = `${head}
