@@ -238,66 +238,77 @@ textarea{width:100%;height:190px;resize:vertical;font-size:14px;user-select:text
 <div id="modal"><div class="box" id="modalBox"></div></div>
 
 <script>
-const DEFAULT_LIST = `tall, taller, tallest
-small, smaller, smallest
-short, shorter, shortest
-long, longer, longest
-old, older, oldest
-young, younger, youngest
-fast, faster, fastest
-slow, slower, slowest
+// Year 6 (Gymnasium Bayern) – mixed order on purpose
+const DEFAULT_LIST = `happy, happier, happiest
 cold, colder, coldest
-warm, warmer, warmest
-cheap, cheaper, cheapest
-clean, cleaner, cleanest
-strong, stronger, strongest
-weak, weaker, weakest
-loud, louder, loudest
-quiet, quieter, quietest
-high, higher, highest
-smart, smarter, smartest
-kind, kinder, kindest
-rich, richer, richest
-nice, nicer, nicest
-large, larger, largest
-safe, safer, safest
-wide, wider, widest
-cute, cuter, cutest
-big, bigger, biggest
-hot, hotter, hottest
-thin, thinner, thinnest
-fat, fatter, fattest
-sad, sadder, saddest
-wet, wetter, wettest
-happy, happier, happiest
-funny, funnier, funniest
-easy, easier, easiest
-busy, busier, busiest
-heavy, heavier, heaviest
-dirty, dirtier, dirtiest
-pretty, prettier, prettiest
-early, earlier, earliest
-lazy, lazier, laziest
-angry, angrier, angriest
 beautiful, more beautiful, most beautiful
-expensive, more expensive, most expensive
-interesting, more interesting, most interesting
-dangerous, more dangerous, most dangerous
-important, more important, most important
-difficult, more difficult, most difficult
-famous, more famous, most famous
-exciting, more exciting, most exciting
-boring, more boring, most boring
-careful, more careful, most careful
-comfortable, more comfortable, most comfortable
-modern, more modern, most modern
-popular, more popular, most popular
+big, bigger, biggest
 good, better, best
+friendly, friendlier, friendliest
+fast, faster, fastest
+interesting, more interesting, most interesting
+nice, nicer, nicest
+hot, hotter, hottest
 bad, worse, worst
-far, further / farther, furthest / farthest
+easy, easier, easiest
+tall, taller, tallest
+expensive, more expensive, most expensive
+funny, funnier, funniest
+sad, sadder, saddest
+old, older, oldest
+famous, more famous, most famous
 little, less, least
+scary, scarier, scariest
+large, larger, largest
+cheap, cheaper, cheapest
+thin, thinner, thinnest
+boring, more boring, most boring
+lucky, luckier, luckiest
+young, younger, youngest
+far, further / farther, furthest / farthest
+safe, safer, safest
+exciting, more exciting, most exciting
+wet, wetter, wettest
+noisy, noisier, noisiest
+long, longer, longest
 much, more, most
-many, more, most`;
+difficult, more difficult, most difficult
+late, later, latest
+dirty, dirtier, dirtiest
+small, smaller, smallest
+dangerous, more dangerous, most dangerous
+fit, fitter, fittest
+heavy, heavier, heaviest
+quiet, quieter, quietest
+brave, braver, bravest
+popular, more popular, most popular
+sunny, sunnier, sunniest
+strong, stronger, strongest
+many, more, most
+short, shorter, shortest
+delicious, more delicious, most delicious
+crazy, crazier, craziest
+warm, warmer, warmest
+wide, wider, widest
+important, more important, most important
+early, earlier, earliest
+clean, cleaner, cleanest
+tidy, tidier, tidiest
+slow, slower, slowest
+terrible, more terrible, most terrible
+hungry, hungrier, hungriest
+loud, louder, loudest
+strange, stranger, strangest
+healthy, healthier, healthiest
+careful, more careful, most careful
+cool, cooler, coolest
+busy, busier, busiest
+high, higher, highest
+wonderful, more wonderful, most wonderful
+lazy, lazier, laziest
+rich, richer, richest
+modern, more modern, most modern
+great, greater, greatest`;
 
 const $ = s => document.querySelector(s);
 // speed 1..10 -> seconds to rise from bottom to top (1 = 22 s, 10 = 5 s)
@@ -353,10 +364,14 @@ function setDaytime(p){ // p: 0 = midday, 1 = sunset
 let cfg = loadCfg();
 function loadCfg(){
   let c = {};
-  try { c = JSON.parse(localStorage.getItem('balloonpop-v1') || '{}'); } catch(e){}
+  try {
+    const v2 = localStorage.getItem('balloonpop-v2');
+    if (v2) c = JSON.parse(v2);
+    else { c = JSON.parse(localStorage.getItem('balloonpop-v1') || '{}'); delete c.list; } // new default word list
+  } catch(e){}
   return Object.assign({nameA:'Red Team', nameB:'Blue Team', time:300, speed:5, maxWords:5, target:0, penalty:false, gold:true, sound:true, list:DEFAULT_LIST}, c);
 }
-function saveCfg(){ try { localStorage.setItem('balloonpop-v1', JSON.stringify(cfg)); } catch(e){} }
+function saveCfg(){ try { localStorage.setItem('balloonpop-v2',JSON.stringify(cfg)); } catch(e){} }
 function fillSetup(){
   $('#nameA').value = cfg.nameA; $('#nameB').value = cfg.nameB;
   $('#time').value = cfg.time; $('#speed').value = cfg.speed; showSpeed(); $('#maxWords').value = cfg.maxWords; $('#target').value = cfg.target;
