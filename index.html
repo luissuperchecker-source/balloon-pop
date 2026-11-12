@@ -15,8 +15,8 @@ button:disabled{opacity:.35;cursor:not-allowed}
 kbd{background:#0002;border-radius:5px;padding:1px 7px;font-family:inherit;font-size:.7em;vertical-align:middle}
 
 /* ================= WORLD ================= */
-#world{position:fixed;inset:0;overflow:hidden;background:linear-gradient(#2f7fd8 0%,#5aa8ef 35%,#a9dcff 72%,#e3f5ff 100%)}
-#dusk{position:absolute;inset:0;background:linear-gradient(#36286a 0%,#b9507c 42%,#ff9a5a 76%,#ffd590 100%);opacity:0;pointer-events:none;transition:opacity 2s}
+#world{position:fixed;top:0;right:0;bottom:0;left:0;overflow:hidden;background:linear-gradient(#2f7fd8 0%,#5aa8ef 35%,#a9dcff 72%,#e3f5ff 100%)}
+#dusk{position:absolute;top:0;right:0;bottom:0;left:0;background:linear-gradient(#36286a 0%,#b9507c 42%,#ff9a5a 76%,#ffd590 100%);opacity:0;pointer-events:none;transition:opacity 2s}
 #sun{position:absolute;right:28%;top:9%;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,#fff8cf 0 40%,#ffd84a 62%,#ffb703 100%);box-shadow:0 0 60px 30px #ffe58f88,0 0 160px 90px #ffe58f40;transition:top 2s}
 .cloud{position:absolute;left:0;width:var(--w);height:calc(var(--w) * .32);background:#fff;border-radius:999px;opacity:var(--o);animation:drift linear infinite;filter:drop-shadow(0 8px 6px #0000000f)}
 .cloud::before,.cloud::after{content:"";position:absolute;background:#fff;border-radius:50%}
@@ -31,9 +31,9 @@ kbd{background:#0002;border-radius:5px;padding:1px 7px;font-family:inherit;font-
 #mountains{bottom:16%;height:34%}
 #hills{bottom:9%;height:24%}
 .prop{position:absolute;transform:translateX(-50%)}
-#balloons{position:absolute;inset:0}
+#balloons{position:absolute;top:0;right:0;bottom:0;left:0}
 #ground{position:absolute;left:0;right:0;bottom:0;height:13%;pointer-events:none}
-#ground svg{position:absolute;inset:0;width:100%;height:100%}
+#ground svg{position:absolute;top:0;right:0;bottom:0;left:0;width:100%;height:100%}
 .flower{position:absolute;width:10px;height:10px;border-radius:50%;box-shadow:0 0 0 3px #fff}
 
 /* ================= BALLOONS ================= */
@@ -62,10 +62,10 @@ kbd{background:#0002;border-radius:5px;padding:1px 7px;font-family:inherit;font-
 @keyframes floatUp{to{transform:translate(-50%,-130px);opacity:0}}
 
 /* ================= HUD ================= */
-#hud{position:fixed;inset:0;pointer-events:none;display:none}
+#hud{position:fixed;top:0;right:0;bottom:0;left:0;pointer-events:none;display:none}
 #hud.on{display:block}
 #hud .teamcard,#hud #center,#hud #pauseLayer.on,#hud #sign{pointer-events:auto}
-.teamcard{position:absolute;top:14px;width:210px;background:#ffffffd9;backdrop-filter:blur(6px);border-radius:20px;padding:12px 14px;text-align:center;box-shadow:0 8px 24px #0002;border:4px solid}
+.teamcard{position:absolute;top:14px;width:210px;background:#ffffffd9;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:20px;padding:12px 14px;text-align:center;box-shadow:0 8px 24px #0002;border:4px solid}
 #teamA{left:14px;border-color:var(--a)} #teamB{right:14px;border-color:var(--b)}
 .teamcard .name{font-size:22px;font-weight:800;word-break:break-word}
 #teamA .name{color:var(--a)} #teamB .name{color:var(--b)}
@@ -86,16 +86,16 @@ input[type=range]{width:100%;height:28px;accent-color:#e5484d;cursor:pointer}
 #sign{position:absolute;left:50%;bottom:2.5%;transform:translateX(-50%) translateY(30px);background:linear-gradient(#a0673a,#7c4a24);color:#fff;border:4px solid #5d3417;border-radius:12px;padding:8px 26px;font-size:clamp(20px,2.4vw,34px);font-weight:800;white-space:nowrap;box-shadow:0 6px 0 #0003;opacity:0;transition:.35s;pointer-events:none;text-shadow:0 2px 0 #0005}
 #sign.on{opacity:1;transform:translateX(-50%)}
 #sign small{display:block;text-align:center;font-size:.55em;opacity:.85}
-#pauseLayer{position:absolute;inset:0;background:#1c234099;display:none;align-items:center;justify-content:center;flex-direction:column;font-size:70px;font-weight:900;color:#fff}
+#pauseLayer{position:absolute;top:0;right:0;bottom:0;left:0;background:#1c234099;display:none;align-items:center;justify-content:center;flex-direction:column;font-size:70px;font-weight:900;color:#fff}
 #pauseLayer.on{display:flex}
 #pauseLayer small{font-size:20px;font-weight:500}
-#countdown{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:200px;font-weight:900;color:#fff;-webkit-text-stroke:6px var(--ink)}
+#countdown{position:absolute;top:0;right:0;bottom:0;left:0;display:none;align-items:center;justify-content:center;font-size:200px;font-weight:900;color:#fff;-webkit-text-stroke:6px var(--ink)}
 #countdown.on{display:flex}
 
 /* ================= SCREENS ================= */
-.screen{position:fixed;inset:0;display:none;overflow:auto;justify-content:center;align-items:flex-start;padding:30px 16px;z-index:10}
+.screen{position:fixed;top:0;right:0;bottom:0;left:0;display:none;overflow:auto;justify-content:center;align-items:flex-start;padding:30px 16px;z-index:10}
 .screen.on{display:flex}
-.card{background:#ffffffeb;backdrop-filter:blur(8px);border-radius:24px;padding:28px;width:min(900px,100%);box-shadow:0 20px 60px #0003}
+.card{background:#ffffffeb;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-radius:24px;padding:28px;width:min(900px,100%);box-shadow:0 20px 60px #0003}
 h1{margin:0 0 4px;font-size:44px}
 h1 span{color:#e5484d}
 .sub{color:var(--muted);margin:0 0 22px;font-size:17px}
@@ -124,7 +124,7 @@ textarea{width:100%;height:190px;resize:vertical;font-size:14px;user-select:text
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
 
 /* ================= MODAL ================= */
-#modal{position:fixed;inset:0;background:#1c234066;display:none;align-items:center;justify-content:center;z-index:20}
+#modal{position:fixed;top:0;right:0;bottom:0;left:0;background:#1c234066;display:none;align-items:center;justify-content:center;z-index:20}
 #modal.on{display:flex}
 .box{background:#fff;border-radius:24px;padding:26px 30px;width:min(700px,94vw);text-align:center;box-shadow:0 30px 80px #0005}
 .box .big{display:inline-block;font-size:60px;font-weight:900;color:#fff;padding:4px 34px;border-radius:999px;margin-bottom:10px;text-shadow:0 2px 0 #0004}
@@ -138,7 +138,24 @@ textarea{width:100%;height:190px;resize:vertical;font-size:14px;user-select:text
 .bA{background:var(--a)!important} .bB{background:var(--b)!important}
 .bOk{background:var(--green)!important} .bNo{background:#d9480f!important} .bSkip{background:#7a8299!important}
 
-@media (max-width:760px){.grid{grid-template-columns:1fr}.teamcard{width:120px;padding:8px}.teamcard .score{font-size:48px}.teamcard .name{font-size:15px}#missedList{columns:1}#timer{font-size:26px}}
+@media (max-width:760px){
+  .grid{grid-template-columns:1fr} #missedList{columns:1} h1{font-size:34px}
+  .teamcard{top:8px;width:96px;padding:6px 4px;border-width:3px;border-radius:14px}
+  #teamA{left:8px} #teamB{right:8px}
+  .teamcard .score{font-size:40px} .teamcard .name{font-size:13px}
+  .teamcard .row{gap:2px;font-size:11px} .teamcard .row button{padding:0 7px;font-size:14px}
+  #center{top:8px;width:calc(100% - 220px);gap:5px}
+  #timer{font-size:24px;padding:2px 14px}
+  #center .tools{flex-wrap:wrap;justify-content:center;gap:4px}
+  #center .tools button{padding:4px 8px;font-size:12px}
+  #center .tools .lbl{display:none}
+  .speedbox{padding:0 6px;font-size:13px} .speedbox input{width:70px}
+  .box{padding:18px 14px} .box .big{font-size:38px;padding:4px 20px}
+  .box .q{font-size:17px} .box .btns button{min-width:120px;font-size:20px;padding:14px 10px}
+  .box .peek{font-size:22px}
+  #countdown{font-size:120px} #pauseLayer{font-size:44px}
+  .final{gap:24px} .final b{font-size:60px} #winner{font-size:36px}
+}
 </style>
 </head>
 <body>
@@ -178,7 +195,7 @@ textarea{width:100%;height:190px;resize:vertical;font-size:14px;user-select:text
   </div>
   <div id="center">
     <div id="timer">5:00</div>
-    <div class="tools"><button id="pauseBtn">⏸ Pause</button><button id="fsBtn">⛶ Fullscreen</button><button id="soundBtn">🔊</button><button id="stopBtn">■ End</button></div>
+    <div class="tools"><button id="pauseBtn">⏸<span class="lbl"> Pause</span></button><button id="fsBtn">⛶<span class="lbl"> Fullscreen</span></button><button id="soundBtn">🔊</button><button id="stopBtn">■<span class="lbl"> End</span></button></div>
     <label class="speedbox">🐢 <input type="range" id="speedLive" min="1" max="10" step="1"> 🚀</label>
   </div>
   <div id="sign"></div>
@@ -476,7 +493,9 @@ function spawn(){
   measure.font = '800 30px "Segoe UI", sans-serif';
   let fs = 30, tw = measure.measureText(a.pos).width;
   if (tw > 175){ fs = 30 * 175 / tw; tw = 175; }
-  const w = Math.max(120, tw + 60), h = Math.round(w * 1.18);
+  const k = Math.max(.7, Math.min(1, innerWidth / 900));   // smaller balloons on phones
+  fs *= k;
+  const w = Math.max(120, tw + 60) * k, h = Math.round(w * 1.18);
   const el = document.createElement('div');
   el.className = 'balloon' + (gold ? ' gold' : '');
   el.style.cssText = `--c:${c};--d:${d};--w:${w}px;--h:${h}px;--fs:${fs}px`;
@@ -670,7 +689,7 @@ function setPause(p){
   if (!G || G.ended || G.modal || G.starting) return;
   G.paused = p;
   $('#pauseLayer').classList.toggle('on', p);
-  $('#pauseBtn').textContent = p ? '▶ Resume' : '⏸ Pause';
+  $('#pauseBtn').innerHTML = p ? '▶<span class="lbl"> Resume</span>' : '⏸<span class="lbl"> Pause</span>';
 }
 
 function endGame(){
