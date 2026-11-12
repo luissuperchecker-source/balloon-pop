@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Balloon Pop</title>
+<style>
+:root{--a:#e5484d;--b:#3e63dd;--ink:#1c2340;--muted:#5b6585;--green:#2f9e55;--gold:#f5b70a}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;font-family:"Segoe UI",system-ui,sans-serif;color:var(--ink);user-select:none;background:#7cc4ff}
+button{font:inherit;cursor:pointer;border:0;border-radius:12px;padding:10px 18px;background:#fff;color:var(--ink);font-weight:700;box-shadow:0 3px 0 #0002}
+button:hover{filter:brightness(.95)}
+button:active{transform:translateY(2px);box-shadow:none}
+button:disabled{opacity:.35;cursor:not-allowed}
+kbd{background:#0002;border-radius:5px;padding:1px 7px;font-family:inherit;font-size:.7em;vertical-align:middle}
+
+/* ================= WORLD ================= */
+#world{position:fixed;inset:0;overflow:hidden;background:linear-gradient(#2f7fd8 0%,#5aa8ef 35%,#a9dcff 72%,#e3f5ff 100%)}
+#dusk{position:absolute;inset:0;background:linear-gradient(#36286a 0%,#b9507c 42%,#ff9a5a 76%,#ffd590 100%);opacity:0;pointer-events:none;transition:opacity 2s}
+#sun{position:absolute;right:28%;top:9%;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,#fff8cf 0 40%,#ffd84a 62%,#ffb703 100%);box-shadow:0 0 60px 30px #ffe58f88,0 0 160px 90px #ffe58f40;transition:top 2s}
+.cloud{position:absolute;left:0;width:var(--w);height:calc(var(--w) * .32);background:#fff;border-radius:999px;opacity:var(--o);animation:drift linear infinite;filter:drop-shadow(0 8px 6px #0000000f)}
+.cloud::before,.cloud::after{content:"";position:absolute;background:#fff;border-radius:50%}
+.cloud::before{width:50%;height:150%;left:12%;bottom:22%}
+.cloud::after{width:36%;height:115%;right:13%;bottom:28%}
+@keyframes drift{from{transform:translateX(-40vw)}to{transform:translateX(125vw)}}
+.bird{position:absolute;left:0;width:30px;animation:drift linear infinite}
+.bird svg{display:block;animation:flap .35s ease-in-out infinite alternate}
+@keyframes flap{to{transform:scaleY(.35)}}
+#farBalloon{position:absolute;left:0;top:24%;width:46px;animation:drift 240s linear infinite;animation-delay:-150s;opacity:.85}
+.layer{position:absolute;left:0;width:100%;display:block}
+#mountains{bottom:16%;height:34%}
+#hills{bottom:9%;height:24%}
+.prop{position:absolute;transform:translateX(-50%)}
+#balloons{position:absolute;inset:0}
+#ground{position:absolute;left:0;right:0;bottom:0;height:13%;pointer-events:none}
+#ground svg{position:absolute;inset:0;width:100%;height:100%}
+.flower{position:absolute;width:10px;height:10px;border-radius:50%;box-shadow:0 0 0 3px #fff}
+
+/* ================= BALLOONS ================= */
+.balloon{position:absolute;left:0;top:0;cursor:pointer;will-change:transform;touch-action:none;transform-origin:50% 30%}
+.balloon .body{position:relative;width:var(--w);height:var(--h);border-radius:50% 50% 47% 47% / 56% 56% 44% 44%;
+  background:radial-gradient(circle at 32% 25%,#ffffffd0 0 5%,#ffffff40 13%,transparent 25%),radial-gradient(circle at 48% 42%,var(--c) 42%,var(--d) 100%);
+  box-shadow:inset -10px -16px 26px #0003,0 12px 22px #0002;display:flex;align-items:center;justify-content:center}
+.balloon .word{color:#fff;font-weight:800;font-size:var(--fs);text-shadow:0 2px 0 #0006,0 0 10px #0005;white-space:nowrap;margin-top:-8%}
+.balloon .pts{position:absolute;top:9%;right:2%;min-width:30px;height:30px;border-radius:15px;background:#fff;color:var(--d);font-weight:900;font-size:17px;display:flex;align-items:center;justify-content:center;padding:0 7px;box-shadow:0 2px 6px #0003}
+.balloon .knot{width:16px;height:12px;margin:-4px auto 0;background:var(--d);clip-path:polygon(50% 0,100% 100%,0 100%)}
+.balloon .string{display:block;margin:0 auto;width:24px;height:90px;overflow:visible}
+.balloon .string path{fill:none;stroke:#555c;stroke-width:1.8}
+.balloon:hover .body{filter:brightness(1.08)}
+.balloon.gold .body{background:radial-gradient(circle at 32% 25%,#fffffff0 0 6%,#ffffff60 14%,transparent 26%),radial-gradient(circle at 48% 42%,#ffe066 35%,#d99a00 100%);box-shadow:inset -10px -16px 26px #0002,0 0 30px 8px #ffd84a99}
+.balloon.gold .body::after{content:"✨";position:absolute;top:-6px;left:4px;font-size:26px;animation:twinkle 1s infinite alternate}
+@keyframes twinkle{to{opacity:.2;transform:scale(.7)}}
+.balloon.popped{cursor:default}
+.balloon.popped .body,.balloon.popped .knot{visibility:hidden}
+.balloon.popped .string{animation:drop 1s ease-in forwards}
+@keyframes drop{to{transform:translateY(220px) rotate(30deg);opacity:0}}
+.shard{position:absolute;width:20px;height:13px;border-radius:40%;pointer-events:none;animation:shard .65s ease-out forwards}
+@keyframes shard{to{transform:translate(var(--dx),var(--dy)) rotate(var(--r)) scale(.3);opacity:0}}
+.poptxt{position:absolute;font-weight:900;font-size:54px;color:#fff;-webkit-text-stroke:3px #1c2340;pointer-events:none;animation:poptxt .7s ease-out forwards;transform:translate(-50%,-50%)}
+@keyframes poptxt{0%{transform:translate(-50%,-50%) scale(.3)}40%{transform:translate(-50%,-50%) scale(1.25)}100%{transform:translate(-50%,-70%) scale(1);opacity:0}}
+.float{position:absolute;font-size:60px;font-weight:900;pointer-events:none;animation:floatUp 1.2s forwards;-webkit-text-stroke:2px #fff;transform:translateX(-50%)}
+@keyframes floatUp{to{transform:translate(-50%,-130px);opacity:0}}
+
+/* ================= HUD ================= */
+#hud{position:fixed;inset:0;pointer-events:none;display:none}
+#hud.on{display:block}
+#hud .teamcard,#hud #center,#hud #pauseLayer.on,#hud #sign{pointer-events:auto}
+.teamcard{position:absolute;top:14px;width:210px;background:#ffffffd9;backdrop-filter:blur(6px);border-radius:20px;padding:12px 14px;text-align:center;box-shadow:0 8px 24px #0002;border:4px solid}
+#teamA{left:14px;border-color:var(--a)} #teamB{right:14px;border-color:var(--b)}
+.teamcard .name{font-size:22px;font-weight:800;word-break:break-word}
+#teamA .name{color:var(--a)} #teamB .name{color:var(--b)}
+.teamcard .score{font-size:84px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;transition:transform .2s}
+.teamcard .score.bump{transform:scale(1.35)}
+.teamcard .row{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-size:14px;font-weight:600}
+.teamcard .row button{padding:2px 11px;font-size:16px;background:#0000000d;box-shadow:none}
+.teamcard.lead .name::after{content:" 👑"}
+#center{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px}
+#timer{background:#ffffffd9;border-radius:999px;padding:4px 26px;font-size:36px;font-weight:900;font-variant-numeric:tabular-nums;box-shadow:0 6px 18px #0002}
+#timer.hurry{color:var(--a);animation:pulse .5s infinite alternate}
+@keyframes pulse{to{transform:scale(1.12)}}
+#center .tools{display:flex;gap:6px}
+#center .tools button{padding:6px 12px;font-size:14px;background:#ffffffc0}
+#sign{position:absolute;left:50%;bottom:2.5%;transform:translateX(-50%) translateY(30px);background:linear-gradient(#a0673a,#7c4a24);color:#fff;border:4px solid #5d3417;border-radius:12px;padding:8px 26px;font-size:clamp(20px,2.4vw,34px);font-weight:800;white-space:nowrap;box-shadow:0 6px 0 #0003;opacity:0;transition:.35s;pointer-events:none;text-shadow:0 2px 0 #0005}
+#sign.on{opacity:1;transform:translateX(-50%)}
+#sign small{display:block;text-align:center;font-size:.55em;opacity:.85}
+#pauseLayer{position:absolute;inset:0;background:#1c234099;display:none;align-items:center;justify-content:center;flex-direction:column;font-size:70px;font-weight:900;color:#fff}
+#pauseLayer.on{display:flex}
+#pauseLayer small{font-size:20px;font-weight:500}
+#countdown{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:200px;font-weight:900;color:#fff;-webkit-text-stroke:6px var(--ink)}
+#countdown.on{display:flex}
+
+/* ================= SCREENS ================= */
+.screen{position:fixed;inset:0;display:none;overflow:auto;justify-content:center;align-items:flex-start;padding:30px 16px;z-index:10}
+.screen.on{display:flex}
+.card{background:#ffffffeb;backdrop-filter:blur(8px);border-radius:24px;padding:28px;width:min(900px,100%);box-shadow:0 20px 60px #0003}
+h1{margin:0 0 4px;font-size:44px}
+h1 span{color:#e5484d}
+.sub{color:var(--muted);margin:0 0 22px;font-size:17px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 24px}
+label{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:15px}
+label.chk{flex-direction:row;align-items:center;gap:10px}
+input[type=text],select,textarea{font:inherit;background:#fff;color:var(--ink);border:2px solid #d5dbef;border-radius:10px;padding:9px 12px}
+input[type=checkbox]{width:20px;height:20px}
+#nameA{border-color:var(--a)} #nameB{border-color:var(--b)}
+textarea{width:100%;height:190px;resize:vertical;font-size:14px;user-select:text}
+.full{grid-column:1/-1}
+.hint{color:var(--muted);font-weight:400;font-size:13px}
+.rules{background:#eef4ff;border-radius:14px;padding:14px 18px;margin:18px 0;font-size:15px;line-height:1.6}
+#startBtn{background:var(--green);color:#fff;font-size:26px;padding:16px 40px;width:100%;box-shadow:0 5px 0 #1d6e3a}
+#end .card{text-align:center}
+#winner{font-size:54px;font-weight:900;margin:6px 0}
+.final{display:flex;justify-content:center;gap:50px;margin:12px 0 22px}
+.final div{font-size:22px;font-weight:800}
+.final b{display:block;font-size:84px;line-height:1.1}
+#missedBox{text-align:left;background:#eef4ff;border-radius:14px;padding:14px 18px;margin:0 0 20px}
+#missedBox h3{margin:0 0 8px}
+#missedList{columns:2;font-size:17px;line-height:1.7}
+.endBtns{display:flex;gap:12px;justify-content:center}
+.endBtns button{font-size:20px;padding:14px 26px}
+.confetti{position:fixed;top:-20px;width:12px;height:18px;z-index:30;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+
+/* ================= MODAL ================= */
+#modal{position:fixed;inset:0;background:#1c234066;display:none;align-items:center;justify-content:center;z-index:20}
+#modal.on{display:flex}
+.box{background:#fff;border-radius:24px;padding:26px 30px;width:min(700px,94vw);text-align:center;box-shadow:0 30px 80px #0005}
+.box .big{display:inline-block;font-size:60px;font-weight:900;color:#fff;padding:4px 34px;border-radius:999px;margin-bottom:10px;text-shadow:0 2px 0 #0004}
+.box .q{color:var(--muted);font-size:21px;margin-bottom:18px;font-weight:600}
+.box .q b{color:var(--ink)}
+.box .btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.box .btns button{font-size:25px;padding:18px 24px;flex:1;min-width:180px;color:#fff}
+.box .small{margin-top:14px;background:transparent;color:var(--muted);font-size:16px;box-shadow:none;font-weight:600}
+.box .peek{margin-top:14px;font-size:30px;font-weight:800;min-height:44px}
+.box .peek span{color:#d97706}
+.bA{background:var(--a)!important} .bB{background:var(--b)!important}
+.bOk{background:var(--green)!important} .bNo{background:#d9480f!important} .bSkip{background:#7a8299!important}
+
+@media (max-width:760px){.grid{grid-template-columns:1fr}.teamcard{width:120px;padding:8px}.teamcard .score{font-size:48px}.teamcard .name{font-size:15px}#missedList{columns:1}#timer{font-size:26px}}
+</style>
+</head>
+<body>
+
+<!-- ================= WORLD ================= -->
+<div id="world">
+  <div id="sun"></div>
+  <div id="sky"></div>
+  <svg id="farBalloon" viewBox="0 0 40 62"><path d="M20 2C8 2 2 11 2 20c0 11 10 20 14 26h8c4-6 14-15 14-26C38 11 32 2 20 2z" fill="#ff6b6b"/><path d="M20 2c-5 0-8 9-8 18 0 11 4 20 4 26h8c0-6 4-15 4-26 0-9-3-18-8-18z" fill="#ffd166"/><path d="M20 2c-2 0-3 9-3 18 0 11 1 20 1 26h4c0-6 1-15 1-26 0-9-1-18-3-18z" fill="#4ecdc4"/><path d="M16 46l1 6M24 46l-1 6" stroke="#6b4" stroke-width="1"/><rect x="15" y="52" width="10" height="8" rx="1" fill="#8b5a2b"/></svg>
+  <svg id="mountains" class="layer" viewBox="0 0 1440 300" preserveAspectRatio="none">
+    <path d="M0 300V170L120 95 230 160 360 40 470 140 590 75 720 150 850 30 980 140 1100 80 1230 150 1340 60 1440 120V300Z" fill="#9fb9d9"/>
+    <path d="M326 72 360 40 396 74 378 66 362 78 346 66Z M816 62 850 30 886 64 868 58 850 70 834 58Z M1310 86 1340 60 1370 88 1354 82 1340 92 1326 82Z" fill="#fff"/>
+    <path d="M0 300V210L160 150 300 205 470 130 640 200 800 140 960 210 1120 150 1290 205 1440 160V300Z" fill="#86a8cc"/>
+  </svg>
+  <svg id="hills" class="layer" viewBox="0 0 1440 300" preserveAspectRatio="none">
+    <path d="M0 190Q180 60 380 140T760 110T1140 130T1440 90V300H0Z" fill="#94d27d"/>
+    <path d="M0 225Q240 140 480 205T960 185T1440 195V300H0Z" fill="#74c062"/>
+  </svg>
+  <div id="props"></div>
+  <div id="dusk"></div>
+  <div id="balloons"></div>
+  <div id="ground">
+    <svg viewBox="0 0 1440 200" preserveAspectRatio="none"><defs><linearGradient id="gg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5cbf4f"/><stop offset="1" stop-color="#2f7d32"/></linearGradient></defs>
+      <path d="M0 55Q360 0 720 40T1440 28V200H0Z" fill="url(#gg)"/></svg>
+  </div>
+</div>
+
+<!-- ================= HUD ================= -->
+<div id="hud">
+  <div class="teamcard" id="teamA">
+    <div class="name"></div><div class="score">0</div>
+    <div class="row"><button data-t="0" data-d="-1">−</button><span class="stat"></span><button data-t="0" data-d="1">+</button></div>
+  </div>
+  <div class="teamcard" id="teamB">
+    <div class="name"></div><div class="score">0</div>
+    <div class="row"><button data-t="1" data-d="-1">−</button><span class="stat"></span><button data-t="1" data-d="1">+</button></div>
+  </div>
+  <div id="center">
+    <div id="timer">5:00</div>
+    <div class="tools"><button id="pauseBtn">⏸ Pause</button><button id="fsBtn">⛶ Fullscreen</button><button id="soundBtn">🔊</button><button id="stopBtn">■ End</button></div>
+  </div>
+  <div id="sign"></div>
+  <div id="countdown"></div>
+  <div id="pauseLayer">PAUSED<small>Press Space or click to continue</small></div>
+</div>
+
+<!-- ================= SETUP ================= -->
+<section id="setup" class="screen on">
+  <div class="card">
+    <h1>🎈 Balloon <span>Pop!</span></h1>
+    <p class="sub">Comparatives &amp; superlatives – balloons float up into the sky. Shout the forms first and pop them for your team!</p>
+    <div class="grid">
+      <label>Team 1<input type="text" id="nameA" maxlength="20"></label>
+      <label>Team 2<input type="text" id="nameB" maxlength="20"></label>
+      <label>Game time
+        <select id="time"><option value="120">2 minutes</option><option value="180">3 minutes</option><option value="300">5 minutes</option><option value="480">8 minutes</option><option value="600">10 minutes</option><option value="0">No time limit</option></select>
+      </label>
+      <label>Speed
+        <select id="tempo"><option value="slow">Slow</option><option value="normal">Normal</option><option value="fast">Fast</option></select>
+      </label>
+      <label>Balloons at once
+        <select id="maxWords"><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="7">7</option></select>
+      </label>
+      <label>Win at
+        <select id="target"><option value="0">End of time</option><option value="15">15 points</option><option value="25">25 points</option><option value="40">40 points</option></select>
+      </label>
+      <label class="chk"><input type="checkbox" id="penalty">Wrong answer = −1 point</label>
+      <label class="chk"><input type="checkbox" id="gold">Golden balloons (double points)</label>
+      <label class="chk"><input type="checkbox" id="sound">Sound on</label>
+      <label class="full">Adjectives <span class="hint">– one per line: <i>adjective, comparative, superlative</i> (e.g. <i>big, bigger, biggest</i>). Edit as you like. <span id="count"></span></span>
+        <textarea id="list" spellcheck="false"></textarea>
+      </label>
+    </div>
+    <div style="margin-top:8px"><button id="resetList">Restore default list</button></div>
+    <div class="rules">
+      <b>How to play:</b> Balloons with adjectives float up from the ground. A student puts up their hand and says all three forms
+      (e.g. <i>big – bigger – biggest</i>). <b>Click the balloon – it pops</b> and the game freezes. Choose the team, then mark the answer <b>Right</b> or <b>Wrong</b>.
+      If it's wrong, the <b>other team can steal</b> the points. Balloons that fly away at the top are lost and appear on the practice list at the end.<br>
+      <b>Points:</b> regular words (<i>-er/-est</i>, <i>more/most</i>) = 1 · spelling changes &amp; irregular (<i>bigger, happier, better…</i>) = 2 · golden balloon = double.<br>
+      <b>Keys:</b> <kbd>1</kbd>/<kbd>2</kbd> team · <kbd>R</kbd> right · <kbd>W</kbd> wrong · <kbd>N</kbd> nobody · <kbd>S</kbd> show answer · <kbd>Esc</kbd> undo pop · <kbd>Space</kbd> pause
+    </div>
+    <button id="startBtn">▶ Start game</button>
+  </div>
+</section>
+
+<!-- ================= END ================= -->
+<section id="end" class="screen">
+  <div class="card">
+    <div id="winner"></div>
+    <div class="final" id="final"></div>
+    <div id="missedBox"><h3>📚 Words to practise</h3><div id="missedList"></div></div>
+    <div class="endBtns"><button id="againBtn" class="bOk" style="color:#fff">↻ Play again</button><button id="setupBtn">⚙ Settings</button></div>
+  </div>
+</section>
+
+<div id="modal"><div class="box" id="modalBox"></div></div>
+
+<script>
+const DEFAULT_LIST = `tall, taller, tallest
+small, smaller, smallest
+short, shorter, shortest
+long, longer, longest
+old, older, oldest
+young, younger, youngest
+fast, faster, fastest
+slow, slower, slowest
+cold, colder, coldest
+warm, warmer, warmest
+cheap, cheaper, cheapest
+clean, cleaner, cleanest
+strong, stronger, strongest
+weak, weaker, weakest
+loud, louder, loudest
+quiet, quieter, quietest
+high, higher, highest
+smart, smarter, smartest
+kind, kinder, kindest
+rich, richer, richest
+nice, nicer, nicest
+large, larger, largest
+safe, safer, safest
+wide, wider, widest
+cute, cuter, cutest
+big, bigger, biggest
+hot, hotter, hottest
+thin, thinner, thinnest
+fat, fatter, fattest
+sad, sadder, saddest
+wet, wetter, wettest
+happy, happier, happiest
+funny, funnier, funniest
+easy, easier, easiest
+busy, busier, busiest
+heavy, heavier, heaviest
+dirty, dirtier, dirtiest
+pretty, prettier, prettiest
+early, earlier, earliest
+lazy, lazier, laziest
+angry, angrier, angriest
+beautiful, more beautiful, most beautiful
+expensive, more expensive, most expensive
+interesting, more interesting, most interesting
+dangerous, more dangerous, most dangerous
+important, more important, most important
+difficult, more difficult, most difficult
+famous, more famous, most famous
+exciting, more exciting, most exciting
+boring, more boring, most boring
+careful, more careful, most careful
+comfortable, more comfortable, most comfortable
+modern, more modern, most modern
+popular, more popular, most popular
+good, better, best
+bad, worse, worst
+far, further / farther, furthest / farthest
+little, less, least
+much, more, most
+many, more, most`;
+
+const $ = s => document.querySelector(s);
+const TEMPO = {slow:17, normal:12, fast:8};   // seconds to rise from bottom to top
+const COLORS = [['#ef4444','#991b1b'],['#f97316','#9a3412'],['#14b8a6','#115e59'],['#22c55e','#166534'],['#06b6d4','#155e75'],['#3b82f6','#1e3a8a'],['#a855f7','#581c87'],['#ec4899','#9d174d']];
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const shuffle = a => { for (let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]} return a; };
+const rnd = (a, b) => a + Math.random() * (b - a);
+
+/* ================= SCENERY ================= */
+(function buildWorld(){
+  const sky = $('#sky');
+  for (let i = 0; i < 8; i++){
+    const c = document.createElement('div'); c.className = 'cloud';
+    const w = rnd(110, 260), dur = rnd(70, 160);
+    c.style.cssText = `--w:${w}px;--o:${rnd(.75,.98)};top:${rnd(4,46)}%;animation-duration:${dur}s;animation-delay:${-rnd(0,dur)}s`;
+    sky.appendChild(c);
+  }
+  for (let i = 0; i < 4; i++){
+    const b = document.createElement('div'); b.className = 'bird';
+    const dur = rnd(35, 70);
+    b.style.cssText = `top:${rnd(12,38)}%;animation-duration:${dur}s;animation-delay:${-rnd(0,dur)}s;width:${rnd(18,32)}px`;
+    b.innerHTML = `<svg viewBox="0 0 30 12" style="animation-delay:${-rnd(0,.4)}s"><path d="M0 7Q7 0 15 7Q23 0 30 7" stroke="#26304a" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>`;
+    sky.appendChild(b);
+  }
+  const tree = c => `<svg viewBox="0 0 60 90"><rect x="26" y="55" width="8" height="35" fill="#7a4a2a"/><circle cx="30" cy="34" r="24" fill="${c}"/><circle cx="17" cy="48" r="15" fill="${c}"/><circle cx="43" cy="48" r="15" fill="${c}"/><circle cx="23" cy="26" r="7" fill="#ffffff22"/></svg>`;
+  const pine = c => `<svg viewBox="0 0 50 100"><rect x="21" y="78" width="8" height="22" fill="#6b3f22"/><polygon points="25,0 48,42 2,42" fill="${c}"/><polygon points="25,20 50,66 0,66" fill="${c}"/><polygon points="25,40 50,84 0,84" fill="${c}"/></svg>`;
+  const house = (roof, wall) => `<svg viewBox="0 0 80 72"><rect x="10" y="30" width="60" height="42" fill="${wall}"/><polygon points="3,33 40,4 77,33" fill="${roof}"/><rect x="34" y="48" width="12" height="24" fill="#8e5a2b"/><rect x="16" y="40" width="12" height="10" fill="#bfe4ff" stroke="#fff" stroke-width="2"/><rect x="52" y="40" width="12" height="10" fill="#bfe4ff" stroke="#fff" stroke-width="2"/><rect x="56" y="10" width="8" height="16" fill="#7b3b2b"/></svg>`;
+  const mill = `<svg viewBox="0 0 80 120"><polygon points="30,40 50,40 56,120 24,120" fill="#f1e3c8"/><rect x="35" y="95" width="10" height="25" fill="#8e5a2b"/><g style="transform-origin:40px 40px;animation:spin 6s linear infinite"><rect x="37" y="0" width="6" height="80" fill="#fff" stroke="#ccc"/><rect x="0" y="37" width="80" height="6" fill="#fff" stroke="#ccc"/></g><circle cx="40" cy="40" r="5" fill="#7b3b2b"/></svg>`;
+  const props = [
+    [3,11,70,tree('#3f9a3a')],[9,12,46,pine('#2f7d3a')],[14,13,40,pine('#358a3f')],[22,12,90,house('#c0392b','#f4e1c1')],
+    [30,12,64,tree('#4caf50')],[41,14,90,mill],[52,11,58,tree('#3f9a3a')],[60,12,42,pine('#2f7d3a')],
+    [67,12,80,house('#2d6cdf','#fff3dc')],[76,11,72,tree('#5cb85c')],[84,12,48,pine('#2e8b57')],[91,11,66,tree('#3f9a3a')],[97,12,44,pine('#2f7d3a')]
+  ];
+  const pc = $('#props');
+  props.forEach(([l, b, w, svg]) => { const d = document.createElement('div'); d.className = 'prop'; d.style.cssText = `left:${l}%;bottom:${b}%;width:${w}px`; d.innerHTML = svg; pc.appendChild(d); });
+  const g = $('#ground'), fc = ['#ff6b6b','#ffd166','#ff9ff3','#ffffff','#a29bfe'];
+  for (let i = 0; i < 45; i++){
+    const f = document.createElement('div'); f.className = 'flower';
+    f.style.cssText = `left:${rnd(1,99)}%;bottom:${rnd(8,55)}%;background:${fc[i % fc.length]};box-shadow:0 0 0 3px ${i%2?'#fff':'#ffe066'}`;
+    g.appendChild(f);
+  }
+  const st = document.createElement('style'); st.textContent = '@keyframes spin{to{transform:rotate(360deg)}}'; document.head.appendChild(st);
+})();
+
+function setDaytime(p){ // p: 0 = midday, 1 = sunset
+  $('#dusk').style.opacity = (p * .62).toFixed(3);
+  $('#sun').style.top = (9 + p * 42) + '%';
+}
+
+/* ================= SETTINGS ================= */
+let cfg = loadCfg();
+function loadCfg(){
+  let c = {};
+  try { c = JSON.parse(localStorage.getItem('balloonpop-v1') || '{}'); } catch(e){}
+  return Object.assign({nameA:'Red Team', nameB:'Blue Team', time:300, tempo:'normal', maxWords:5, target:0, penalty:false, gold:true, sound:true, list:DEFAULT_LIST}, c);
+}
+function saveCfg(){ try { localStorage.setItem('balloonpop-v1', JSON.stringify(cfg)); } catch(e){} }
+function fillSetup(){
+  $('#nameA').value = cfg.nameA; $('#nameB').value = cfg.nameB;
+  $('#time').value = cfg.time; $('#tempo').value = cfg.tempo; $('#maxWords').value = cfg.maxWords; $('#target').value = cfg.target;
+  $('#penalty').checked = cfg.penalty; $('#gold').checked = cfg.gold; $('#sound').checked = cfg.sound;
+  $('#list').value = cfg.list; updateCount();
+}
+function readSetup(){
+  cfg.nameA = $('#nameA').value.trim() || 'Team 1';
+  cfg.nameB = $('#nameB').value.trim() || 'Team 2';
+  cfg.time = +$('#time').value; cfg.tempo = $('#tempo').value; cfg.maxWords = +$('#maxWords').value; cfg.target = +$('#target').value;
+  cfg.penalty = $('#penalty').checked; cfg.gold = $('#gold').checked; cfg.sound = $('#sound').checked;
+  cfg.list = $('#list').value; saveCfg();
+}
+function parseList(txt){
+  return txt.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#')).map(l => {
+    const p = l.split(/[,;|]/).map(s => s.trim()).filter(Boolean);
+    if (p.length < 3) return null;
+    const [pos, komp, sup] = p;
+    const P = pos.toLowerCase(), K = komp.toLowerCase(), S = sup.toLowerCase().replace(/^the /, '');
+    const regular = (K === P + 'er' && S === P + 'est') || (P.endsWith('e') && K === P + 'r' && S === P + 'st') ||
+                    (K === 'more ' + P && S === 'most ' + P);
+    return {pos, komp, sup, tricky: !regular};
+  }).filter(Boolean);
+}
+function updateCount(){ $('#count').textContent = '(' + parseList($('#list').value).length + ' adjectives found)'; }
+$('#list').addEventListener('input', updateCount);
+$('#resetList').onclick = () => { $('#list').value = DEFAULT_LIST; updateCount(); };
+
+/* ================= SOUND ================= */
+let AC;
+function ac(){ AC = AC || new (window.AudioContext || window.webkitAudioContext)(); return AC; }
+function tone(f, d=.12, type='sine', v=.15, delay=0, f2){
+  if (!cfg.sound) return;
+  try {
+    const A = ac(), t = A.currentTime + delay, o = A.createOscillator(), g = A.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
+    g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.001, t + d);
+    o.connect(g).connect(A.destination); o.start(t); o.stop(t + d);
+  } catch(e){}
+}
+function sndPop(){
+  if (!cfg.sound) return;
+  try {
+    const A = ac(), len = A.sampleRate * .12, buf = A.createBuffer(1, len, A.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 4);
+    const s = A.createBufferSource(), hp = A.createBiquadFilter(), g = A.createGain();
+    s.buffer = buf; hp.type = 'highpass'; hp.frequency.value = 900; g.gain.value = .9;
+    s.connect(hp).connect(g).connect(A.destination); s.start();
+    tone(700, .08, 'triangle', .12, 0, 180);
+  } catch(e){}
+}
+const sndOk = () => { tone(660,.12,'triangle'); tone(880,.12,'triangle',.15,.1); tone(1320,.25,'triangle',.12,.2); };
+const sndNo = () => { tone(220,.3,'sawtooth',.08); tone(160,.35,'sawtooth',.08,.15); };
+const sndAway = () => tone(500, .5, 'sine', .08, 0, 1400);
+
+/* ================= GAME ================= */
+const layer = $('#balloons');
+const measure = document.createElement('canvas').getContext('2d');
+let G = null;
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id));
+  $('#hud').classList.toggle('on', id === 'game');
+}
+
+function startGame(){
+  const list = parseList(cfg.list);
+  if (list.length < 3){ alert('Please enter at least 3 adjectives (adjective, comparative, superlative).'); return; }
+  layer.innerHTML = '';
+  G = {list, pool:[], bs:[], teams:[{name:cfg.nameA,score:0,ok:0,no:0},{name:cfg.nameB,score:0,ok:0,no:0}],
+       elapsed:0, spawnT:0, paused:false, modal:null, missed:new Map(), ended:false, starting:true};
+  show('game'); renderTeams(); renderTimer(); setDaytime(0);
+  $('#soundBtn').textContent = cfg.sound ? '🔊' : '🔇';
+  const cd = $('#countdown'); let n = 3; cd.classList.add('on'); cd.textContent = n; tone(440,.15);
+  const iv = setInterval(() => {
+    n--;
+    if (n > 0){ cd.textContent = n; tone(440,.15); }
+    else { clearInterval(iv); cd.textContent = 'Go!'; tone(880,.3);
+      setTimeout(() => { cd.classList.remove('on'); if (G) G.starting = false; }, 500); }
+  }, 800);
+}
+
+function nextAdj(){
+  const onScreen = new Set(G.bs.map(b => b.a.pos));
+  for (let tries = 0; tries < 3; tries++){
+    if (!G.pool.length) G.pool = shuffle(G.list.slice());
+    const a = G.pool.pop();
+    if (!onScreen.has(a.pos)) return a;
+  }
+  return G.pool.pop() || G.list[0];
+}
+
+function spawn(){
+  const a = nextAdj();
+  const gold = cfg.gold && Math.random() < .12;
+  const pts = (a.tricky ? 2 : 1) * (gold ? 2 : 1);
+  const [c, d] = gold ? ['#ffd23f','#b07800'] : COLORS[Math.random() * COLORS.length | 0];
+  measure.font = '800 30px "Segoe UI", sans-serif';
+  let fs = 30, tw = measure.measureText(a.pos).width;
+  if (tw > 175){ fs = 30 * 175 / tw; tw = 175; }
+  const w = Math.max(120, tw + 60), h = Math.round(w * 1.18);
+  const el = document.createElement('div');
+  el.className = 'balloon' + (gold ? ' gold' : '');
+  el.style.cssText = `--c:${c};--d:${d};--w:${w}px;--h:${h}px;--fs:${fs}px`;
+  el.innerHTML = `<div class="body"><span class="word">${esc(a.pos)}</span><span class="pts">${pts}</span></div><div class="knot"></div>` +
+    `<svg class="string" viewBox="0 0 24 90"><path d="M12 0q9 15 0 30t0 30 0 30"/></svg>`;
+  layer.appendChild(el);
+  const W = innerWidth, H = innerHeight;
+  let bestX = 20, bestD = -Infinity;
+  for (let i = 0; i < 14; i++){
+    const x = 20 + Math.random() * Math.max(1, W - w - 40);
+    let dist = 1e9;
+    for (const o of G.bs) if (o.y > H - h * 3.5) dist = Math.min(dist, Math.abs((x + w/2) - (o.bx + o.w/2)) - (w + o.w)/2);
+    if (dist > bestD){ bestD = dist; bestX = x; }
+  }
+  const b = {a, el, bx:bestX, x:bestX, y:H + 10, w, h, pts, gold, c, t:0, amp:rnd(8,22), fq:rnd(.6,1.2), ph:rnd(0,6.28)};
+  place(b);
+  el.addEventListener('pointerdown', e => { e.preventDefault(); popBalloon(b); });
+  G.bs.push(b);
+}
+function place(b){
+  b.x = b.bx + Math.sin(b.t * b.fq + b.ph) * b.amp;
+  const r = Math.cos(b.t * b.fq + b.ph) * 4;
+  b.el.style.transform = `translate(${b.x}px,${b.y}px) rotate(${r}deg)`;
+}
+
+function update(dt){
+  G.elapsed += dt;
+  if (cfg.time){ setDaytime(Math.min(1, G.elapsed / cfg.time)); if (G.elapsed >= cfg.time){ renderTimer(); endGame(); return; } }
+  const mul = 1 + .5 * Math.min(1, G.elapsed / (cfg.time || 300));
+  const rise = TEMPO[cfg.tempo] || 12, H = innerHeight;
+  for (const b of G.bs.slice()){
+    b.t += dt;
+    b.y -= (H + b.h) / rise * mul * dt;
+    if (b.y + b.h < -10) flyAway(b); else place(b);
+  }
+  G.spawnT -= dt * mul;
+  if (G.spawnT <= 0 || G.bs.length === 0){
+    if (G.bs.length < cfg.maxWords){ spawn(); G.spawnT = rise / cfg.maxWords * 1.05; }
+    else G.spawnT = .3;
+  }
+  renderTimer();
+}
+
+function dropBalloon(b){ G.bs = G.bs.filter(x => x !== b); }
+
+function flyAway(b){
+  dropBalloon(b); b.el.remove(); sndAway();
+  G.missed.set(b.a.pos, b.a);
+  sign(b.a, 'Flew away! 🎈');
+}
+
+function sign(a, title){
+  const s = $('#sign');
+  s.innerHTML = `<small>${esc(title)}</small>${esc(a.pos)} – ${esc(a.komp)} – ${esc(a.sup)}`;
+  s.classList.add('on');
+  clearTimeout(sign.t); sign.t = setTimeout(() => s.classList.remove('on'), 3500);
+}
+
+function burst(b){
+  const cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+  for (let i = 0; i < 14; i++){
+    const s = document.createElement('div'); s.className = 'shard';
+    const ang = Math.random() * Math.PI * 2, dist = rnd(80, 190);
+    s.style.cssText = `left:${cx}px;top:${cy}px;background:${b.c};--dx:${Math.cos(ang)*dist}px;--dy:${Math.sin(ang)*dist}px;--r:${rnd(-400,400)}deg`;
+    layer.appendChild(s); setTimeout(() => s.remove(), 700);
+  }
+  const t = document.createElement('div'); t.className = 'poptxt'; t.textContent = 'POP!';
+  t.style.left = cx + 'px'; t.style.top = cy + 'px';
+  layer.appendChild(t); setTimeout(() => t.remove(), 750);
+}
+
+function floatText(b, txt, color){
+  const f = document.createElement('div'); f.className = 'float';
+  f.textContent = txt; f.style.color = color;
+  f.style.left = (b.x + b.w / 2) + 'px'; f.style.top = (b.y + b.h / 3) + 'px';
+  layer.appendChild(f); setTimeout(() => f.remove(), 1250);
+}
+
+/* ================= POP & JUDGE ================= */
+function popBalloon(b){
+  if (!G || G.paused || G.modal || G.ended || G.starting || b.popped) return;
+  b.popped = true;
+  b.el.classList.add('popped');
+  sndPop(); burst(b);
+  G.modal = {b, step:'team', team:null, first:null, peek:false};
+  setTimeout(renderModal, 260);
+}
+
+const teamColor = i => i ? 'var(--b)' : 'var(--a)';
+
+function renderModal(){
+  const m = G.modal; if (!m) return;
+  const box = $('#modalBox'), a = m.b.a;
+  const head = `<div class="big" style="background:${m.b.c}">${esc(a.pos)}</div>`;
+  const ptsTxt = m.b.pts > 1 ? `<b style="color:#d97706">${m.b.pts} points</b>` : '1 point';
+  const peek = `<div class="peek">${m.peek ? `${esc(a.pos)} – <span>${esc(a.komp)}</span> – <span>${esc(a.sup)}</span>`
+                 : `<button class="small" style="margin:0" onclick="togglePeek()">👁 Show answer (only for you) <kbd>S</kbd></button>`}</div>`;
+  if (m.step === 'team'){
+    box.innerHTML = `${head}
+      <div class="q">Who answered? · ${ptsTxt}</div>
+      <div class="btns">
+        <button class="bA" onclick="pickTeam(0)">${esc(G.teams[0].name)} <kbd>1</kbd></button>
+        <button class="bB" onclick="pickTeam(1)">${esc(G.teams[1].name)} <kbd>2</kbd></button>
+      </div>
+      <button class="small" onclick="undoPop()">↩ Oops – bring the balloon back <kbd>Esc</kbd></button>`;
+  } else {
+    const t = G.teams[m.team];
+    const q = m.step === 'judge'
+      ? `<b style="color:${teamColor(m.team)}">${esc(t.name)}</b> answered – was it right?`
+      : `Wrong! 🔄 <b style="color:${teamColor(m.team)}">${esc(t.name)}</b> – can you steal it?`;
+    box.innerHTML = `${head}
+      <div class="q">${q} · ${ptsTxt}</div>
+      <div class="btns">
+        <button class="bOk" onclick="judge(true)">✔ Right <kbd>R</kbd></button>
+        <button class="bNo" onclick="judge(false)">✘ Wrong <kbd>W</kbd></button>
+        ${m.step === 'steal' ? `<button class="bSkip" onclick="nobody()">No answer <kbd>N</kbd></button>` : ''}
+      </div>
+      ${peek}
+      ${m.step === 'judge' ? `<button class="small" onclick="G.modal.step='team';renderModal()">← choose other team</button>` : ''}`;
+  }
+  $('#modal').classList.add('on');
+}
+
+function togglePeek(){ if (G.modal && G.modal.step !== 'team'){ G.modal.peek = !G.modal.peek; renderModal(); } }
+
+function pickTeam(t){
+  if (!G.modal || G.modal.step !== 'team') return;
+  G.modal.team = t; G.modal.first = t; G.modal.step = 'judge'; renderModal();
+}
+
+function undoPop(){
+  const m = G.modal; if (!m || m.step !== 'team') return;
+  m.b.popped = false; m.b.el.classList.remove('popped');
+  G.modal = null; $('#modal').classList.remove('on');
+}
+
+function finish(b, success, title){
+  G.modal = null; $('#modal').classList.remove('on');
+  dropBalloon(b); setTimeout(() => b.el.remove(), 1000);
+  if (!success) G.missed.set(b.a.pos, b.a);
+  sign(b.a, title);
+  renderTeams();
+  const top = Math.max(G.teams[0].score, G.teams[1].score);
+  if (cfg.target && top >= cfg.target) setTimeout(endGame, 800);
+}
+
+function judge(ok){
+  const m = G.modal; if (!m || m.step === 'team') return;
+  const t = G.teams[m.team], b = m.b;
+  if (ok){
+    t.score += b.pts; t.ok++;
+    floatText(b, '+' + b.pts, teamColor(m.team)); sndOk(); bump(m.team);
+    finish(b, true, t.name + ' ✔');
+    return;
+  }
+  t.no++; sndNo();
+  if (cfg.penalty && t.score > 0){ t.score--; bump(m.team); }
+  if (m.step === 'judge'){ m.team = 1 - m.team; m.step = 'steal'; m.peek = false; renderTeams(); renderModal(); }
+  else finish(b, false, 'Both wrong – the answer is:');
+}
+
+function nobody(){
+  const m = G.modal; if (!m || m.step !== 'steal') return;
+  finish(m.b, false, 'The answer is:');
+}
+
+function bump(i){
+  const s = document.querySelectorAll('.teamcard .score')[i];
+  s.classList.add('bump'); setTimeout(() => s.classList.remove('bump'), 200);
+}
+
+function renderTeams(){
+  ['#teamA','#teamB'].forEach((id, i) => {
+    const el = $(id), t = G.teams[i];
+    el.querySelector('.name').textContent = t.name;
+    el.querySelector('.score').textContent = t.score;
+    el.querySelector('.stat').textContent = `✔ ${t.ok} · ✘ ${t.no}`;
+    el.classList.toggle('lead', t.score > G.teams[1-i].score);
+  });
+}
+
+function renderTimer(){
+  const el = $('#timer');
+  if (!cfg.time){ const s = G.elapsed|0; el.textContent = (s/60|0) + ':' + String(s%60).padStart(2,'0'); el.classList.remove('hurry'); return; }
+  const left = Math.max(0, Math.ceil(cfg.time - G.elapsed));
+  el.textContent = (left/60|0) + ':' + String(left%60).padStart(2,'0');
+  el.classList.toggle('hurry', left <= 10 && left > 0);
+}
+
+function setPause(p){
+  if (!G || G.ended || G.modal || G.starting) return;
+  G.paused = p;
+  $('#pauseLayer').classList.toggle('on', p);
+  $('#pauseBtn').textContent = p ? '▶ Resume' : '⏸ Pause';
+}
+
+function endGame(){
+  if (!G || G.ended) return;
+  G.ended = true;
+  G.modal = null; $('#modal').classList.remove('on');
+  const [A, B] = G.teams;
+  const win = A.score === B.score ? null : (A.score > B.score ? 0 : 1);
+  $('#winner').innerHTML = win === null ? "🤝 It's a tie!" :
+    `🏆 <span style="color:${teamColor(win)}">${esc(G.teams[win].name)}</span> wins!`;
+  $('#final').innerHTML = G.teams.map((t, i) =>
+    `<div style="color:${teamColor(i)}">${esc(t.name)}<b>${t.score}</b><span class="hint">✔ ${t.ok} · ✘ ${t.no}</span></div>`).join('');
+  const missed = [...G.missed.values()];
+  $('#missedBox').style.display = missed.length ? '' : 'none';
+  $('#missedList').innerHTML = missed.map(a => `<div><b>${esc(a.pos)}</b> – ${esc(a.komp)} – ${esc(a.sup)}</div>`).join('');
+  show('end'); sndOk(); confetti(win === null ? null : (win ? '#3e63dd' : '#e5484d'));
+}
+
+function confetti(main){
+  const cols = main ? [main, main, '#f5b70a', '#ffffff'] : ['#e5484d','#3e63dd','#f5b70a','#30a46c'];
+  for (let i = 0; i < 90; i++){
+    const c = document.createElement('div'); c.className = 'confetti';
+    c.style.left = Math.random() * 100 + 'vw'; c.style.background = cols[i % cols.length];
+    c.style.animationDuration = (2 + Math.random() * 2.5) + 's'; c.style.animationDelay = Math.random() * 1.2 + 's';
+    document.body.appendChild(c); setTimeout(() => c.remove(), 5000);
+  }
+}
+
+/* ================= LOOP ================= */
+let last = performance.now();
+function frame(t){
+  const dt = Math.min(.05, (t - last) / 1000); last = t;
+  if (G && !G.ended && !G.paused && !G.modal && !G.starting) update(dt);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* ================= CONTROLS ================= */
+$('#startBtn').onclick = () => { readSetup(); startGame(); };
+$('#againBtn').onclick = startGame;
+$('#setupBtn').onclick = () => { G = null; layer.innerHTML = ''; setDaytime(0); fillSetup(); show('setup'); };
+$('#pauseBtn').onclick = () => G && setPause(!G.paused);
+$('#pauseLayer').onclick = () => setPause(false);
+$('#stopBtn').onclick = () => { if (G && confirm('End the game now?')) endGame(); };
+$('#fsBtn').onclick = () => { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch(e){} };
+$('#soundBtn').onclick = () => { cfg.sound = !cfg.sound; saveCfg(); $('#soundBtn').textContent = cfg.sound ? '🔊' : '🔇'; };
+document.querySelectorAll('.teamcard .row button').forEach(b => b.onclick = () => {
+  const t = G.teams[+b.dataset.t]; t.score = Math.max(0, t.score + +b.dataset.d); renderTeams();
+});
+
+document.addEventListener('keydown', e => {
+  if (!G || G.ended || !$('#hud').classList.contains('on')) return;
+  const k = e.key.toLowerCase(), m = G.modal;
+  if (m){
+    if (m.step === 'team'){
+      if (k === '1' || k === 'a') pickTeam(0);
+      else if (k === '2' || k === 'b') pickTeam(1);
+      else if (k === 'escape') undoPop();
+    } else {
+      if (k === 'r' || k === 'enter') judge(true);
+      else if (k === 'w' || k === 'f') judge(false);
+      else if (k === 'n') nobody();
+      else if (k === 's') togglePeek();
+      else if (k === 'backspace' && m.step === 'judge'){ m.step = 'team'; renderModal(); }
+    }
+    e.preventDefault(); return;
+  }
+  if (k === ' '){ e.preventDefault(); setPause(!G.paused); }
+});
+
+fillSetup();
+</script>
+</body>
+</html>
