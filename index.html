@@ -79,6 +79,9 @@ kbd{background:#0002;border-radius:5px;padding:1px 7px;font-family:inherit;font-
 #timer.hurry{color:var(--a);animation:pulse .5s infinite alternate}
 @keyframes pulse{to{transform:scale(1.12)}}
 #center .tools{display:flex;gap:6px}
+input[type=range]{width:100%;height:28px;accent-color:#e5484d;cursor:pointer}
+.speedbox{flex-direction:row;align-items:center;gap:6px;background:#ffffffc0;border-radius:999px;padding:2px 12px;font-size:18px}
+.speedbox input{width:150px}
 #center .tools button{padding:6px 12px;font-size:14px;background:#ffffffc0}
 #sign{position:absolute;left:50%;bottom:2.5%;transform:translateX(-50%) translateY(30px);background:linear-gradient(#a0673a,#7c4a24);color:#fff;border:4px solid #5d3417;border-radius:12px;padding:8px 26px;font-size:clamp(20px,2.4vw,34px);font-weight:800;white-space:nowrap;box-shadow:0 6px 0 #0003;opacity:0;transition:.35s;pointer-events:none;text-shadow:0 2px 0 #0005}
 #sign.on{opacity:1;transform:translateX(-50%)}
@@ -176,6 +179,7 @@ textarea{width:100%;height:190px;resize:vertical;font-size:14px;user-select:text
   <div id="center">
     <div id="timer">5:00</div>
     <div class="tools"><button id="pauseBtn">⏸ Pause</button><button id="fsBtn">⛶ Fullscreen</button><button id="soundBtn">🔊</button><button id="stopBtn">■ End</button></div>
+    <label class="speedbox">🐢 <input type="range" id="speedLive" min="1" max="10" step="1"> 🚀</label>
   </div>
   <div id="sign"></div>
   <div id="countdown"></div>
@@ -193,8 +197,8 @@ textarea{width:100%;height:190px;resize:vertical;font-size:14px;user-select:text
       <label>Game time
         <select id="time"><option value="120">2 minutes</option><option value="180">3 minutes</option><option value="300">5 minutes</option><option value="480">8 minutes</option><option value="600">10 minutes</option><option value="0">No time limit</option></select>
       </label>
-      <label>Speed
-        <select id="tempo"><option value="slow">Slow</option><option value="normal">Normal</option><option value="fast">Fast</option></select>
+      <label>Balloon speed: <span id="speedVal" class="hint" style="font-size:15px;font-weight:700"></span>
+        <input type="range" id="speed" min="1" max="10" step="1">
       </label>
       <label>Balloons at once
         <select id="maxWords"><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="7">7</option></select>
@@ -296,7 +300,9 @@ much, more, most
 many, more, most`;
 
 const $ = s => document.querySelector(s);
-const TEMPO = {slow:17, normal:12, fast:8};   // seconds to rise from bottom to top
+// speed 1..10 -> seconds to rise from bottom to top (1 = 22 s, 10 = 5 s)
+const riseTime = () => 22 * Math.pow(5 / 22, (cfg.speed - 1) / 9);
+const SPEED_NAMES = ['','very slow','very slow','slow','slow','normal','normal','fast','fast','very fast','super fast'];
 const COLORS = [['#ef4444','#991b1b'],['#f97316','#9a3412'],['#14b8a6','#115e59'],['#22c55e','#166534'],['#06b6d4','#155e75'],['#3b82f6','#1e3a8a'],['#a855f7','#581c87'],['#ec4899','#9d174d']];
 const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const shuffle = a => { for (let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]} return a; };
@@ -348,19 +354,19 @@ let cfg = loadCfg();
 function loadCfg(){
   let c = {};
   try { c = JSON.parse(localStorage.getItem('balloonpop-v1') || '{}'); } catch(e){}
-  return Object.assign({nameA:'Red Team', nameB:'Blue Team', time:300, tempo:'normal', maxWords:5, target:0, penalty:false, gold:true, sound:true, list:DEFAULT_LIST}, c);
+  return Object.assign({nameA:'Red Team', nameB:'Blue Team', time:300, speed:5, maxWords:5, target:0, penalty:false, gold:true, sound:true, list:DEFAULT_LIST}, c);
 }
 function saveCfg(){ try { localStorage.setItem('balloonpop-v1', JSON.stringify(cfg)); } catch(e){} }
 function fillSetup(){
   $('#nameA').value = cfg.nameA; $('#nameB').value = cfg.nameB;
-  $('#time').value = cfg.time; $('#tempo').value = cfg.tempo; $('#maxWords').value = cfg.maxWords; $('#target').value = cfg.target;
+  $('#time').value = cfg.time; $('#speed').value = cfg.speed; showSpeed(); $('#maxWords').value = cfg.maxWords; $('#target').value = cfg.target;
   $('#penalty').checked = cfg.penalty; $('#gold').checked = cfg.gold; $('#sound').checked = cfg.sound;
   $('#list').value = cfg.list; updateCount();
 }
 function readSetup(){
   cfg.nameA = $('#nameA').value.trim() || 'Team 1';
   cfg.nameB = $('#nameB').value.trim() || 'Team 2';
-  cfg.time = +$('#time').value; cfg.tempo = $('#tempo').value; cfg.maxWords = +$('#maxWords').value; cfg.target = +$('#target').value;
+  cfg.time = +$('#time').value; cfg.speed = +$('#speed').value; cfg.maxWords = +$('#maxWords').value; cfg.target = +$('#target').value;
   cfg.penalty = $('#penalty').checked; cfg.gold = $('#gold').checked; cfg.sound = $('#sound').checked;
   cfg.list = $('#list').value; saveCfg();
 }
@@ -375,6 +381,10 @@ function parseList(txt){
     return {pos, komp, sup, tricky: !regular};
   }).filter(Boolean);
 }
+function showSpeed(){ $('#speedVal').textContent = cfg.speed + ' / 10 – ' + SPEED_NAMES[cfg.speed]; $('#speedLive').value = cfg.speed; }
+function setSpeed(v){ cfg.speed = Math.min(10, Math.max(1, +v || 5)); $('#speed').value = cfg.speed; showSpeed(); saveCfg(); }
+$('#speed').addEventListener('input', e => setSpeed(e.target.value));
+$('#speedLive').addEventListener('input', e => { setSpeed(e.target.value); e.target.blur(); });
 function updateCount(){ $('#count').textContent = '(' + parseList($('#list').value).length + ' adjectives found)'; }
 $('#list').addEventListener('input', updateCount);
 $('#resetList').onclick = () => { $('#list').value = DEFAULT_LIST; updateCount(); };
@@ -481,7 +491,7 @@ function update(dt){
   G.elapsed += dt;
   if (cfg.time){ setDaytime(Math.min(1, G.elapsed / cfg.time)); if (G.elapsed >= cfg.time){ renderTimer(); endGame(); return; } }
   const mul = 1 + .5 * Math.min(1, G.elapsed / (cfg.time || 300));
-  const rise = TEMPO[cfg.tempo] || 12, H = innerHeight;
+  const rise = riseTime(), H = innerHeight;
   for (const b of G.bs.slice()){
     b.t += dt;
     b.y -= (H + b.h) / rise * mul * dt;
